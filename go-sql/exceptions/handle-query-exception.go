@@ -2,7 +2,7 @@ package exceptions
 
 import "log"
 
-func HandleErr(err error) {
+func HandleQueryException(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
