@@ -7,6 +7,7 @@ import (
 	"github.com/sboy99/learn-go/go-task-management/src/adapters/controllers/transformers"
 	"github.com/sboy99/learn-go/go-task-management/src/adapters/repositories/postgres"
 	"github.com/sboy99/learn-go/go-task-management/src/internal/domain/models"
+	"github.com/sboy99/learn-go/go-task-management/src/internal/helpers"
 	"github.com/sboy99/learn-go/go-task-management/src/internal/services"
 	"github.com/sboy99/learn-go/go-task-management/src/routers"
 )
@@ -17,26 +18,41 @@ type App struct {
 }
 
 func (app *App) Init() {
+	// helpers
+	cryptoHelper := &helpers.CryptoHelper{}
+	stringHelper := &helpers.StringHelper{}
+
 	// repositories
 	userPostgresRepo := &postgres.UserPostgresRepository{
-		DB: app.DB,
+		DB:           app.DB,
+		CryptoHelper: cryptoHelper,
+		StringHelper: stringHelper,
 	}
 	taskPostgresRepo := &postgres.TaskPostgresRepository{
 		DB: app.DB,
 	}
 
-	// transformers
-	userTransformer := &transformers.UserTransformer{}
-
 	// services
+	authService := &services.AuthService{
+		UserRepo:     userPostgresRepo,
+		CryptoHelper: cryptoHelper,
+	}
 	userService := &services.UserService{
-		UserRepo: userPostgresRepo,
+		UserRepo:     userPostgresRepo,
+		CryptoHelper: cryptoHelper,
 	}
 	taskService := &services.TaskService{
 		TaskRepo: taskPostgresRepo,
 	}
 
+	// transformers
+	userTransformer := &transformers.UserTransformer{}
+
 	// controllers
+	authController := &controllers.AuthController{
+		Service:         authService,
+		UserTransformer: userTransformer,
+	}
 	userController := &controllers.UserController{
 		Service:     userService,
 		Transformer: userTransformer,
@@ -46,6 +62,10 @@ func (app *App) Init() {
 	}
 
 	// routers
+	authRouter := &routers.AuthRouter{
+		Router:     app.Router,
+		Controller: authController,
+	}
 	userRouter := &routers.UserRouter{
 		Router:     app.Router,
 		Controller: userController,
@@ -56,6 +76,7 @@ func (app *App) Init() {
 	}
 
 	// register routes
+	authRouter.Register()
 	userRouter.Register()
 	taskRouter.Register()
 }

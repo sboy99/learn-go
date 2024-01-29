@@ -20,6 +20,7 @@ func (t *UserTransformer) TransformCreateReq(ctx *gin.Context) dtos.CreateUserRe
 func (t *UserTransformer) TransformCreateRes(user *models.User) dtos.CreateUserResDto {
 	createUserResDto := dtos.CreateUserResDto{
 		Id:        user.ID,
+		Slug:      user.Slug,
 		Name:      user.Name,
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,

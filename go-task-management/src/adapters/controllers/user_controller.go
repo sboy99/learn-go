@@ -16,8 +16,8 @@ type UserController struct {
 
 // user controller methods
 func (c *UserController) Create(ctx *gin.Context) {
-	createUserReqDto := c.Transformer.TransformCreateReq(ctx)
-	userData := c.Service.Create(createUserReqDto.Name, createUserReqDto.Email)
+	dto := c.Transformer.TransformCreateReq(ctx)
+	userData := c.Service.Create(dto.Name, dto.Email, dto.Password)
 	user := c.Transformer.TransformCreateRes(userData)
 	ctx.JSON(http.StatusOK, user)
 }
