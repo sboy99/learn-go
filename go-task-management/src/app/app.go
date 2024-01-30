@@ -1,8 +1,6 @@
 package app
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/sboy99/learn-go/go-task-management/src/adapters/controllers"
 	"github.com/sboy99/learn-go/go-task-management/src/adapters/controllers/transformers"
 	"github.com/sboy99/learn-go/go-task-management/src/adapters/repositories/postgres"
@@ -12,12 +10,7 @@ import (
 	"github.com/sboy99/learn-go/go-task-management/src/routers"
 )
 
-type App struct {
-	Router *gin.Engine
-	DB     *gorm.DB
-}
-
-func (app *App) Init() {
+func (app *App) RegisterRouters() {
 	// helpers
 	cryptoHelper := &helpers.CryptoHelper{}
 	stringHelper := &helpers.StringHelper{}
