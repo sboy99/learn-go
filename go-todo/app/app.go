@@ -52,6 +52,7 @@ func (a *App) RegisterMiddlewares() {
 func (a *App) RegisterRoutes() {
 	a.registerHealthRoutes()
 	a.registerTaskRoutes()
+	a.registerUserRoutes()
 }
 
 func (a *App) RegisterDatabaseRelations() {
@@ -85,5 +86,19 @@ func (a *App) registerTaskRoutes() {
 		Service: taskService,
 	}
 
-	a.Router.Post("/task", taskHandler.Create)
+	a.Router.Post("/tasks", taskHandler.Create)
+}
+
+func (a *App) registerUserRoutes() {
+	userRepo := &postgres.UserPostgresRepository{
+		DB: a.DB,
+	}
+	userService := &services.UserService{
+		UserRepo: userRepo,
+	}
+	userHandler := &rest.UserHandler{
+		Service: userService,
+	}
+
+	a.Router.Post("/users", userHandler.Create)
 }

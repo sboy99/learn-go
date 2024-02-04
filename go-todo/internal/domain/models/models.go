@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type model struct {
+type Model struct {
 	Id        uint           `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time      `json:"createdAt,omitempty"`
 	UpdatedAt time.Time      `json:"updatedAt,omitempty"`
@@ -14,7 +14,7 @@ type model struct {
 }
 
 type User struct {
-	model
+	Model
 	Name   string  `json:"name"`
 	Slug   string  `json:"slug"`
 	Avatar *string `json:"avatar"`
@@ -22,7 +22,7 @@ type User struct {
 }
 
 type Task struct {
-	model
+	Model
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
 	UserId   uint   `json:"userId"`

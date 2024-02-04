@@ -11,7 +11,7 @@ import (
 // ------------------------------INTERFACES---------------------------------- //
 
 type ITaskRestHandler interface {
-	Check(c *fiber.Ctx) error
+	Create(c *fiber.Ctx) error
 }
 
 // ------------------------------STRUCTS---------------------------------- //
