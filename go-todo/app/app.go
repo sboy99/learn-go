@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest"
 	"github.com/sboy99/learn-go/go-todo/adapters/repositories/postgres"
@@ -46,13 +47,14 @@ func Create() (*App, error) {
 }
 
 func (a *App) RegisterMiddlewares() {
+	a.Router.Use(logger.New())
 	a.Router.Use(recover.New())
 }
 
 func (a *App) RegisterRoutes() {
 	a.registerHealthRoutes()
+	a.registerAuthRoutes()
 	a.registerTaskRoutes()
-	a.registerUserRoutes()
 }
 
 func (a *App) RegisterDatabaseRelations() {
@@ -75,6 +77,21 @@ func (a *App) registerHealthRoutes() {
 	a.Router.Get("/", healtHandler.Check)
 }
 
+func (a *App) registerAuthRoutes() {
+	userRepo := &postgres.UserPostgresRepository{
+		DB: a.DB,
+	}
+	authService := &services.AuthService{
+		UserRepo: userRepo,
+	}
+
+	authHandler := &rest.AuthHandler{
+		Service: authService,
+	}
+
+	a.Router.Post("/auth/register", authHandler.Register)
+}
+
 func (a *App) registerTaskRoutes() {
 	taskRepo := &postgres.TaskPostgresRepository{
 		DB: a.DB,
@@ -90,15 +107,4 @@ func (a *App) registerTaskRoutes() {
 }
 
 func (a *App) registerUserRoutes() {
-	userRepo := &postgres.UserPostgresRepository{
-		DB: a.DB,
-	}
-	userService := &services.UserService{
-		UserRepo: userRepo,
-	}
-	userHandler := &rest.UserHandler{
-		Service: userService,
-	}
-
-	a.Router.Post("/users", userHandler.Create)
 }

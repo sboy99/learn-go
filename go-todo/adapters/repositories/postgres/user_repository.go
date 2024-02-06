@@ -16,37 +16,57 @@ type UserPostgresRepository struct {
 
 // ------------------------------PUBLIC_METHODS---------------------------------- //
 
-func (r *UserPostgresRepository) Create(name string, slug string) (*models.User, error) {
+func (r *UserPostgresRepository) Create(email string, pass string, name string, slug string) (*models.User, error) {
 	// create a new task
 	user := &models.User{
-		Name: name,
-		Slug: slug,
+		Slug:  slug,
+		Name:  name,
+		Email: email,
+		Pass:  pass,
 	}
 	// save the task in database
 	err := r.DB.Create(user).Error
 	return user, err
 }
 
-func (r *UserPostgresRepository) GetSlug(name string, delimiter *string) (*string, error) {
+func (r *UserPostgresRepository) GetSlug(name string) (string, error) {
 	user := new(models.User)
-	slug := helpers.GenSlugStr(name, delimiter)
-	d := ""
-
-	if delimiter != nil {
-		d = *delimiter
-	}
+	delimeter := ""
+	slug := helpers.GenSlugStr(name, delimeter)
 
 	for true {
 		err := r.DB.First(user, &models.User{
 			Slug: slug,
 		}).Error
 		if err != nil {
-			return &slug, nil
+			return slug, nil
 		}
 
-		slug += d + helpers.GetSlugSalt(1000)
+		slug += delimeter + helpers.GetSlugSalt(1000)
 
 	}
 
-	return nil, errors.New("Can't generate slug")
+	return "", errors.New("Can't generate slug")
 }
+
+func (r *UserPostgresRepository) GetUserWithEmail(email string) (*models.User, error) {
+	user, err := r.GetUser(&models.User{Email: email})
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *UserPostgresRepository) GetUser(conds *models.User) (*models.User, error) {
+	user := new(models.User)
+
+	err := r.DB.First(user, conds).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// ------------------------------PRIVATE_METHODS---------------------------------- //

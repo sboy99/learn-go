@@ -5,13 +5,8 @@ import (
 	"strings"
 )
 
-func GenSlugStr(str string, delimeter *string) string {
-	var d string = ""
-	if delimeter != nil {
-		d = *delimeter
-	}
-
-	slug := strings.Replace(strings.ToLower(str), " ", d, -1)
+func GenSlugStr(str string, delimeter string) string {
+	slug := strings.Replace(strings.ToLower(str), " ", delimeter, -1)
 	return slug
 }
 

@@ -7,10 +7,10 @@ import (
 // -------------------------------INTERFACES--------------------------------- //
 
 type IUserRepositoryPort interface {
-	Create(name string, slug string) (*models.User, error)
-	GetSlug(name string, delimiter *string) (*string, error)
+	Create(email string, pass string, name string, slug string) (*models.User, error)
+	GetSlug(name string) (string, error)
+	GetUserWithEmail(email string) (*models.User, error)
+	GetUser(conds *models.User) (*models.User, error)
 }
 
-type IUserServicePort interface {
-	Create(name string) (*models.User, error)
-}
+type IUserServicePort interface{}

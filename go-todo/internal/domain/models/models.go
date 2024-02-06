@@ -18,6 +18,8 @@ type User struct {
 	Name   string  `json:"name"`
 	Slug   string  `json:"slug"`
 	Avatar *string `json:"avatar"`
+	Email  string  `json:"email"`
+	Pass   string  `json:"pass"`
 	// Tasks  []Task  `json:"tasks"`
 }
 
