@@ -28,3 +28,12 @@ func InternalServerErrorException(err error) *HttpException {
 		Message:    message,
 	}
 }
+
+func NotFoundException(err error) *HttpException {
+	var message string = err.Error()
+
+	return &HttpException{
+		StatusCode: http.StatusNotFound,
+		Message:    message,
+	}
+}

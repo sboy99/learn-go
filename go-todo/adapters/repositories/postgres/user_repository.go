@@ -49,7 +49,7 @@ func (r *UserPostgresRepository) GetSlug(name string) (string, error) {
 	return "", errors.New("Can't generate slug")
 }
 
-func (r *UserPostgresRepository) GetUserWithEmail(email string) (*models.User, error) {
+func (r *UserPostgresRepository) GetUserByEmail(email string) (*models.User, error) {
 	user, err := r.GetUser(&models.User{Email: email})
 	if err != nil {
 		return nil, err

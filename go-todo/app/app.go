@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest"
+	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest/transformers"
 	"github.com/sboy99/learn-go/go-todo/adapters/repositories/postgres"
 	"github.com/sboy99/learn-go/go-todo/infra/config"
 	"github.com/sboy99/learn-go/go-todo/infra/database"
@@ -84,12 +85,14 @@ func (a *App) registerAuthRoutes() {
 	authService := &services.AuthService{
 		UserRepo: userRepo,
 	}
-
+	authTransformer := &transformers.AuthTransformer{}
 	authHandler := &rest.AuthHandler{
-		Service: authService,
+		Service:    authService,
+		Tranformer: authTransformer,
 	}
 
 	a.Router.Post("/auth/register", authHandler.Register)
+	a.Router.Post("/auth/login", authHandler.Login)
 }
 
 func (a *App) registerTaskRoutes() {
