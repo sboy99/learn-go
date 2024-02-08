@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest"
 	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest/transformers"
+	"github.com/sboy99/learn-go/go-todo/adapters/jwt"
 	"github.com/sboy99/learn-go/go-todo/adapters/repositories/postgres"
 	"github.com/sboy99/learn-go/go-todo/infra/config"
 	"github.com/sboy99/learn-go/go-todo/infra/database"
@@ -79,11 +80,14 @@ func (a *App) registerHealthRoutes() {
 }
 
 func (a *App) registerAuthRoutes() {
+	jwtAdapter := &jwt.JwtAdapter{}
+
 	userRepo := &postgres.UserPostgresRepository{
 		DB: a.DB,
 	}
 	authService := &services.AuthService{
-		UserRepo: userRepo,
+		UserRepo:   userRepo,
+		JwtAdapter: jwtAdapter,
 	}
 	authTransformer := &transformers.AuthTransformer{}
 	authHandler := &rest.AuthHandler{

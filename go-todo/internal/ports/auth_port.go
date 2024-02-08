@@ -9,5 +9,5 @@ import (
 
 type IAuthServicePort interface {
 	Register(email string, pass string, name string) (*models.User, *exception.HttpException)
-	Login(email string, pass string) (*models.User, *exception.HttpException)
+	Login(email string, pass string) (string, string, *exception.HttpException)
 }

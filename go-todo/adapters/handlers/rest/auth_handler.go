@@ -60,7 +60,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return nil
 	}
 
-	user, err := h.Service.Login(reqDto.Email, reqDto.Pass)
+	accessToken, refreshToken, err := h.Service.Login(reqDto.Email, reqDto.Pass)
 	if err != nil {
 		exception.HandleHttpException(c, err)
 		return nil
@@ -69,9 +69,10 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	// todo: transform
 
 	c.Status(http.StatusOK).JSON(fiber.Map{
-		"status":  http.StatusOK,
-		"message": "User registered successfully",
-		"user":    *user,
+		"status":       http.StatusOK,
+		"message":      "User registered successfully",
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
 	})
 
 	return nil

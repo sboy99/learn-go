@@ -12,7 +12,8 @@ import (
 // ------------------------------STRUCTS---------------------------------- //
 
 type AuthService struct {
-	UserRepo ports.IUserRepositoryPort
+	UserRepo   ports.IUserRepositoryPort
+	JwtAdapter ports.IJWTAdapterPort
 }
 
 // ------------------------------PUBLIC_METHODS---------------------------------- //
@@ -46,20 +47,29 @@ func (s *AuthService) Register(email string, pass string, name string) (*models.
 	return user, nil
 }
 
-func (s *AuthService) Login(email string, pass string) (*models.User, *exception.HttpException) {
+func (s *AuthService) Login(email string, pass string) (string, string, *exception.HttpException) {
 	// get user
 	user, err := s.getUserByEmail(email)
 	if user == nil || err != nil {
-		return nil, exception.NotFoundException(err)
+		return "", "", exception.NotFoundException(err)
 	}
 
 	// compare password
 	if err := s.comparePassword(pass, *&user.Pass); err != nil {
-		return nil, exception.BadRequestException(err)
+		return "", "", exception.BadRequestException(err)
+	}
+
+	// user jwt payload
+	payload := s.getUserJwtPayload(user)
+
+	// get jwt token
+	accessToekn, err := s.JwtAdapter.Sign(payload)
+	if err != nil {
+		return "", "", exception.InternalServerErrorException(err)
 	}
 
 	// done
-	return user, nil
+	return accessToekn, "", nil
 }
 
 // ------------------------------PRIVATE_METHODS---------------------------------- //
@@ -90,4 +100,14 @@ func (s *AuthService) comparePassword(password string, hash string) error {
 	}
 
 	return nil
+}
+
+func (s *AuthService) getUserJwtPayload(user *models.User) map[string]interface{} {
+	payload := make(map[string]interface{})
+
+	payload["sub"] = user.Slug
+	payload["id"] = user.Id
+	payload["name"] = user.Name
+
+	return payload
 }
