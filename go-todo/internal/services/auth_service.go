@@ -5,15 +5,15 @@ import (
 
 	"github.com/sboy99/learn-go/go-todo/infra/exception"
 	"github.com/sboy99/learn-go/go-todo/internal/domain/models"
-	"github.com/sboy99/learn-go/go-todo/internal/helpers"
 	"github.com/sboy99/learn-go/go-todo/internal/ports"
 )
 
 // ------------------------------STRUCTS---------------------------------- //
 
 type AuthService struct {
-	UserRepo   ports.IUserRepositoryPort
-	JwtAdapter ports.IJWTAdapterPort
+	UserRepo     ports.IUserRepositoryPort
+	JwtAdapter   ports.IJWTAdapterPort
+	CryptoHelper ports.ICryptoHelperPort
 }
 
 // ------------------------------PUBLIC_METHODS---------------------------------- //
@@ -85,7 +85,7 @@ func (s *AuthService) isExistingEmail(email string) (bool, error) {
 }
 
 func (s *AuthService) encryptPassword(password string) (string, error) {
-	return helpers.HashStr(password)
+	return s.CryptoHelper.HashStr(password)
 }
 
 func (s *AuthService) getUserByEmail(email string) (*models.User, error) {
@@ -93,7 +93,7 @@ func (s *AuthService) getUserByEmail(email string) (*models.User, error) {
 }
 
 func (s *AuthService) comparePassword(password string, hash string) error {
-	isCorrect := helpers.CompareHash(password, hash)
+	isCorrect := s.CryptoHelper.CompareHash(password, hash)
 
 	if !isCorrect {
 		return errors.New(`Invalid Credentials`)

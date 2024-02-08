@@ -4,7 +4,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashStr(str string) (string, error) {
+// -----------------------------STRUCTS----------------------------------- //
+
+type CryptoHelper struct{}
+
+// -----------------------------PUBLIC_METHODS----------------------------------- //
+
+func (h *CryptoHelper) HashStr(str string) (string, error) {
 	buff, err := bcrypt.GenerateFromPassword([]byte(str), 10)
 	if err != nil {
 		return "", err
@@ -12,7 +18,7 @@ func HashStr(str string) (string, error) {
 	return string(buff), nil
 }
 
-func CompareHash(str string, hash string) bool {
+func (h *CryptoHelper) CompareHash(str string, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(str))
 	if err != nil {
 		return false

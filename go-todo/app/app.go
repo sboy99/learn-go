@@ -6,22 +6,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest"
-	"github.com/sboy99/learn-go/go-todo/adapters/handlers/rest/transformers"
-	"github.com/sboy99/learn-go/go-todo/adapters/jwt"
-	"github.com/sboy99/learn-go/go-todo/adapters/repositories/postgres"
 	"github.com/sboy99/learn-go/go-todo/infra/config"
 	"github.com/sboy99/learn-go/go-todo/infra/database"
 	"github.com/sboy99/learn-go/go-todo/internal/domain/models"
-	"github.com/sboy99/learn-go/go-todo/internal/services"
 	"gorm.io/gorm"
 )
 
 // ------------------------------STRUCT---------------------------------- //
 
 type App struct {
-	Router *fiber.App
-	DB     *gorm.DB
+	Router   *fiber.App
+	DB       *gorm.DB
+	Handlers *RestHandlers
 }
 
 // ------------------------------PUBLIC---------------------------------- //
@@ -39,10 +35,16 @@ func Create() (*App, error) {
 		return nil, err
 	}
 
+	// create handler
+	handler := &Handler{
+		DB: db,
+	}
+
 	// create app
 	app := &App{
-		Router: fiber.New(),
-		DB:     db,
+		Router:   fiber.New(),
+		DB:       db,
+		Handlers: handler.initRestHandlers(),
 	}
 
 	return app, nil
@@ -72,45 +74,16 @@ func (a *App) Serve() {
 // ------------------------------PRIVATE---------------------------------- //
 
 func (a *App) registerHealthRoutes() {
-	healtHandler := &rest.HealthHandler{
-		Service: &services.HealthService{},
-	}
-
-	a.Router.Get("/", healtHandler.Check)
+	a.Router.Get("/", a.Handlers.HealthHandler.Check)
 }
 
 func (a *App) registerAuthRoutes() {
-	jwtAdapter := &jwt.JwtAdapter{}
-
-	userRepo := &postgres.UserPostgresRepository{
-		DB: a.DB,
-	}
-	authService := &services.AuthService{
-		UserRepo:   userRepo,
-		JwtAdapter: jwtAdapter,
-	}
-	authTransformer := &transformers.AuthTransformer{}
-	authHandler := &rest.AuthHandler{
-		Service:    authService,
-		Tranformer: authTransformer,
-	}
-
-	a.Router.Post("/auth/register", authHandler.Register)
-	a.Router.Post("/auth/login", authHandler.Login)
+	a.Router.Post("/auth/register", a.Handlers.AuthHandler.Register)
+	a.Router.Post("/auth/login", a.Handlers.AuthHandler.Login)
 }
 
 func (a *App) registerTaskRoutes() {
-	taskRepo := &postgres.TaskPostgresRepository{
-		DB: a.DB,
-	}
-	taskService := &services.TaskService{
-		TaskRepo: taskRepo,
-	}
-	taskHandler := &rest.TaskHandler{
-		Service: taskService,
-	}
-
-	a.Router.Post("/tasks", taskHandler.Create)
+	a.Router.Post("/tasks", a.Handlers.TaskHandler.Create)
 }
 
 func (a *App) registerUserRoutes() {
