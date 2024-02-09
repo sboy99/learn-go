@@ -5,7 +5,14 @@ import (
 	"github.com/sboy99/learn-go/go-todo/internal/domain/models"
 )
 
-// -------------------------------INTERFACES--------------------------------- //
+// -------------------------------SERVICE--------------------------------- //
+
+type IAuthStrategyPort interface {
+	Authenticate(strategy IJwtExtractorStrategyPort, payload interface{}) error
+	ExtractToken(strategy IJwtExtractorStrategyPort) (string, error)
+}
+
+// -------------------------------SERVICE--------------------------------- //
 
 type IAuthServicePort interface {
 	Register(email string, pass string, name string) (*models.User, *exception.HttpException)

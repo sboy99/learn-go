@@ -1,6 +1,9 @@
 package jwt
 
 import (
+	"errors"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,13 +16,35 @@ type JwtAdapter struct{}
 
 // ------------------------------PUBLIC_METHODS---------------------------------- //
 
-func (a *JwtAdapter) Sign(payload map[string]interface{}) (string, error) {
-	claims := a.getClaims(payload)
+func (a *JwtAdapter) Sign(payload interface{}) (string, error) {
+	claims := a.getClaims(a.structToMap(payload))
 	token, err := a.signClaims(claims)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
+}
+
+func (a *JwtAdapter) Validate(tokenString string, payload interface{}) error {
+	token, err := a.parseToken(tokenString)
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return errors.New("Invalid token")
+	}
+
+	claims, err := a.extractClaims(token)
+	if err != nil {
+		return err
+	}
+
+	if err := a.mapToStruct(*claims, payload); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ------------------------------PRIVATE_METHODS---------------------------------- //
@@ -34,7 +59,6 @@ func (a *JwtAdapter) getClaims(payload map[string]interface{}) jwt.MapClaims {
 
 	// add timestamp to claims
 	claims["iat"] = time.Now().Unix()
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
 	// done
 	return claims
@@ -58,4 +82,58 @@ func (a *JwtAdapter) getSecret(secretFor string) []byte {
 	default:
 		return []byte(jwtSecret)
 	}
+}
+
+func (a *JwtAdapter) parseToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+
+		return a.getSecret("access_token"), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func (a *JwtAdapter) extractClaims(token *jwt.Token) (*jwt.MapClaims, error) {
+	claims, ok := token.Claims.(*jwt.MapClaims)
+	if !ok {
+		return nil, errors.New(`Unable to extract claims`)
+	}
+	return claims, nil
+}
+
+// todo: move to helper
+func (a *JwtAdapter) structToMap(data interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	val := reflect.ValueOf(data)
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		fieldValue := val.Field(i).Interface()
+		result[field.Name] = fieldValue
+	}
+
+	return result
+}
+
+func (a *JwtAdapter) mapToStruct(m map[string]interface{}, s interface{}) error {
+	sType := reflect.TypeOf(s).Elem()
+	sValue := reflect.ValueOf(s).Elem()
+
+	for i := 0; i < sType.NumField(); i++ {
+		field := sType.Field(i)
+		if value, ok := m[field.Name]; ok {
+			sValue.Field(i).Set(reflect.ValueOf(value))
+		}
+	}
+
+	return nil
 }

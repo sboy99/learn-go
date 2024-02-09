@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"github.com/sboy99/learn-go/go-todo/infra/exception"
 	"github.com/sboy99/learn-go/go-todo/internal/domain/models"
@@ -59,17 +60,14 @@ func (s *AuthService) Login(email string, pass string) (string, string, *excepti
 		return "", "", exception.BadRequestException(err)
 	}
 
-	// user jwt payload
-	payload := s.getUserJwtPayload(user)
-
 	// get jwt token
-	accessToekn, err := s.JwtAdapter.Sign(payload)
+	accessToken, err := s.getAccessToken(user)
 	if err != nil {
 		return "", "", exception.InternalServerErrorException(err)
 	}
 
 	// done
-	return accessToekn, "", nil
+	return accessToken, "", nil
 }
 
 // ------------------------------PRIVATE_METHODS---------------------------------- //
@@ -102,12 +100,25 @@ func (s *AuthService) comparePassword(password string, hash string) error {
 	return nil
 }
 
-func (s *AuthService) getUserJwtPayload(user *models.User) map[string]interface{} {
-	payload := make(map[string]interface{})
+func (s *AuthService) getAccessToken(user *models.User) (string, error) {
+	// user access token payload
+	payload := s.getAccessTokenPayload(user)
 
-	payload["sub"] = user.Slug
-	payload["id"] = user.Id
-	payload["name"] = user.Name
+	accessToken, err := s.JwtAdapter.Sign(payload)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
+func (s *AuthService) getAccessTokenPayload(user *models.User) *ports.AccessTokenPayload {
+	payload := new(ports.AccessTokenPayload)
+
+	payload.Name = user.Name
+	payload.Subject = user.Slug
+	payload.UserId = user.Id
+	payload.ExpiresAt = time.Now().Add(time.Hour * 24).Unix()
 
 	return payload
 }
